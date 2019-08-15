@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>694</width>
-    <height>503</height>
+    <height>543</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -42,25 +42,31 @@
             </widget>
            </item>
            <item>
-            <widget class="QFrame" name="frame">
-             <property name="frameShape">
-              <enum>QFrame::StyledPanel</enum>
-             </property>
-             <property name="frameShadow">
-              <enum>QFrame::Raised</enum>
-             </property>
+            <widget class="QWidget" name="widget" native="true">
              <layout class="QHBoxLayout" name="horizontalLayout">
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>0</number>
+              </property>
               <item>
                <widget class="QPushButton" name="btnClearFiles">
                 <property name="text">
-                 <string>Clear</string>
+                 <string>&amp;Clear</string>
                 </property>
                </widget>
               </item>
               <item>
                <widget class="QPushButton" name="btnRemove">
                 <property name="text">
-                 <string>Remove</string>
+                 <string>&amp;Remove</string>
                 </property>
                </widget>
               </item>
@@ -80,14 +86,14 @@
               <item>
                <widget class="QPushButton" name="btnOpenFiles">
                 <property name="text">
-                 <string>Open files...</string>
+                 <string>&amp;Open files...</string>
                 </property>
                </widget>
               </item>
               <item>
                <widget class="QPushButton" name="btnOpenFolder">
                 <property name="text">
-                 <string>Open folder...</string>
+                 <string>Open &amp;folder...</string>
                 </property>
                </widget>
               </item>
@@ -119,7 +125,7 @@
         <item>
          <widget class="QRadioButton" name="rbBundledDoc">
           <property name="text">
-           <string>Save pages to single document (bundled DjVu)</string>
+           <string>Save pages to single document (&amp;bundled DjVu)</string>
           </property>
           <property name="checked">
            <bool>false</bool>
@@ -128,8 +134,11 @@
         </item>
         <item>
          <widget class="QRadioButton" name="rbIndirectDoc">
+          <property name="toolTip">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Specifying this option in multipage mode causes minidjvu to generate an &lt;span style=&quot; font-style:italic;&quot;&gt;indirect&lt;/span&gt; multipage document, consisting from a single index file, several single-page DjVu files (one per each image passed to the encoder) and several shared dictionary files. Note that the index file is created under the name specified for the output file in the command line, while for each page the original input file name is preserved, with the extension being changed to &amp;quot;.djvu&amp;quot;. &lt;/p&gt;&lt;p&gt;This mode is useful for placing a large document to a Web server, or if you are going to postprocess the generated files (e. g. by adding a color background). In the later case you may then want to convert your indirect document to DjVu bundled, using the &lt;span style=&quot; font-weight:600;&quot;&gt;djvmcvt&lt;/span&gt; utility, supplied with DjVuLibre. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
           <property name="text">
-           <string>Save each page to separate document (indirect DjVu)</string>
+           <string>Save each page to separate document (&amp;indirect DjVu)</string>
           </property>
           <property name="checked">
            <bool>true</bool>
@@ -180,8 +189,11 @@
                <verstretch>0</verstretch>
               </sizepolicy>
              </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Specify the resolution of an image, measured in dots per inch. The resolution affects some algorithms and it's recorded in DjVu and BMP files (TIFF should join someday). &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
-              <string>600</string>
+              <string/>
              </property>
              <property name="alignment">
               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -267,6 +279,9 @@
                <verstretch>0</verstretch>
               </sizepolicy>
              </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Specify how many pages to compress in one pass. The default is 10. If &lt;span style=&quot; font-weight:600;&quot;&gt;-p 0&lt;/span&gt; is specified, minidjvu will attempt to process all pages at once, but be aware that this can take a lot of memory, especially on large books. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
               <string>10</string>
              </property>
@@ -306,14 +321,17 @@
            </item>
            <item>
             <widget class="QLineEdit" name="edExt">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Specifies an extension for shared dictionary files (without a leading period). The default is &amp;quot;djbz&amp;quot;. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
-              <string>.djbz</string>
+              <string/>
              </property>
              <property name="alignment">
               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
              </property>
              <property name="placeholderText">
-              <string>.djbz</string>
+              <string>djbz</string>
              </property>
             </widget>
            </item>
@@ -377,18 +395,212 @@
           </layout>
          </widget>
         </item>
-        <item row="2" column="1">
-         <widget class="QWidget" name="widget_4" native="true">
-          <layout class="QHBoxLayout" name="horizontalLayout_5">
-           <item>
-            <widget class="QLabel" name="label_2">
+        <item row="4" column="0" colspan="2">
+         <widget class="QGroupBox" name="gbCompression">
+          <property name="title">
+           <string>Compression</string>
+          </property>
+          <property name="checkable">
+           <bool>false</bool>
+          </property>
+          <layout class="QGridLayout" name="gridLayout">
+           <item row="1" column="0">
+            <widget class="QCheckBox" name="cbClean">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Remove small black marks that are probably noise. This algorithm can really devastate halftone patterns, so use with caution. &lt;/p&gt;&lt;p&gt;This option is turned on by &lt;span style=&quot; font-weight:600;&quot;&gt;--lossy.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
-              <string>Agression:</string>
+              <string>Clean</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QCheckBox" name="cbMatch">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Run pattern matching. This is the main method of shrinking the file size, but it can also bring trouble with substitution errors. Use &lt;span style=&quot; font-weight:600;&quot;&gt;--aggression&lt;/span&gt; option to maintain balance between file size and error probability. &lt;/p&gt;&lt;p&gt;This option is turned on by &lt;span style=&quot; font-weight:600;&quot;&gt;--lossy&lt;/span&gt; or &lt;span style=&quot; font-weight:600;&quot;&gt;--aggression.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="text">
+              <string>Match</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QCheckBox" name="cbLossy">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Turn on all lossy options. Is equivalent to &lt;span style=&quot; font-weight:600;&quot;&gt;--clean&lt;/span&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;--erosion&lt;/span&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;--match&lt;/span&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;--smooth.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="text">
+              <string>Lossy</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="2">
+            <widget class="QWidget" name="widget_4" native="true">
+             <layout class="QHBoxLayout" name="horizontalLayout_5">
+              <property name="spacing">
+               <number>0</number>
+              </property>
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="QLabel" name="label_2">
+                <property name="text">
+                 <string>Agression:</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QSpinBox" name="sbAgression">
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Sets aggression for pattern matching. The more the aggression, the less the file size, but the more likely substitution errors will occur. The default is 100. Usually you can raise it to about 110 more or less safely. Probably even 200 will work fine, but don't rely on that. &lt;/p&gt;&lt;p&gt;Consistent aggression levels between versions is not guaranteed. The default, however, will always be 100. &lt;/p&gt;&lt;p&gt;This option turns on &lt;span style=&quot; font-weight:600;&quot;&gt;--match&lt;/span&gt; automatically. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+                <property name="maximum">
+                 <number>200</number>
+                </property>
+                <property name="value">
+                 <number>100</number>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="1" column="2">
+            <widget class="QCheckBox" name="cbAveraging">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Compute &amp;quot;average&amp;quot; representatives for shapes matching a pattern. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="text">
+              <string>Average prototypes</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QCheckBox" name="cbProtos">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;You may disable prototype searching. This makes lossless compression faster, but produced files become much bigger. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="text">
+              <string>Use prototypes</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0">
+            <widget class="QCheckBox" name="cbSmooth">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Flip some pixels that appear to be noise. The gain in file size is about 5%. Visually the image is slightly improved, but it's hardly noticeable. &lt;/p&gt;&lt;p&gt;Current filter is dumb and only removes black pixels with at least 3 white neighbors (of 4). You probably won't notice the effects. &lt;/p&gt;&lt;p&gt;This option is turned on by &lt;span style=&quot; font-weight:600;&quot;&gt;--lossy.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="text">
+              <string>Smooth</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QCheckBox" name="cbErosion">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Sacrifice image quality to gain about 5-10% in file size. One erosion is almost invisible, but 10 erosions in a row spoil an image badly (and they won't give you 50-100% of file size, alas). Erosion bonus stacks with pattern matching. &lt;/p&gt;&lt;p&gt;Erosion makes no sense when the output is not DjVu. &lt;/p&gt;&lt;p&gt;This option is turned on by &lt;span style=&quot; font-weight:600;&quot;&gt;--lossy.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="text">
+              <string>Erosion</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="5" column="0" colspan="2">
+         <widget class="QGroupBox" name="gbLogging">
+          <property name="title">
+           <string>Logging</string>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_10">
+           <item>
+            <widget class="QCheckBox" name="cbReport">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Print verbose messages about what's done on which page. Works only with multipage encoding. Useful only to survive boredom while compressing a book. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="text">
+              <string>Report progress</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
              </property>
             </widget>
            </item>
            <item>
-            <spacer name="horizontalSpacer_8">
+            <widget class="QCheckBox" name="cbWarnings">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Do not disable libtiff warnings. By default, TIFF warnings are supressed. Under Windows default TIFF warning handler creates a message box. This is unacceptable in a batch processing script, for instance. So the minidjvu default behavior is a workaround for libtiff default behavior. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="text">
+              <string>Show libTiff warnings</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="cbVerbose">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Print messages about various stages of the process. It's not very useful, but interesting to examine. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="text">
+              <string>Verbose</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="6" column="1">
+         <widget class="QWidget" name="widget_2" native="true">
+          <layout class="QHBoxLayout" name="horizontalLayout_12">
+           <property name="spacing">
+            <number>0</number>
+           </property>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <spacer name="horizontalSpacer_9">
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
              </property>
@@ -401,127 +613,15 @@
             </spacer>
            </item>
            <item>
-            <widget class="QSpinBox" name="sbAgression">
-             <property name="maximum">
-              <number>200</number>
+            <widget class="QPushButton" name="btnOptReset">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
              </property>
-             <property name="value">
-              <number>100</number>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item row="3" column="0" colspan="2">
-         <widget class="QGroupBox" name="gbCompression">
-          <property name="title">
-           <string>Compression</string>
-          </property>
-          <property name="checkable">
-           <bool>false</bool>
-          </property>
-          <layout class="QGridLayout" name="gridLayout">
-           <item row="1" column="0">
-            <widget class="QCheckBox" name="cbClean">
              <property name="text">
-              <string>Clean</string>
-             </property>
-             <property name="checked">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QCheckBox" name="cbMatch">
-             <property name="text">
-              <string>Match</string>
-             </property>
-             <property name="checked">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="2">
-            <widget class="QCheckBox" name="cbSmooth">
-             <property name="text">
-              <string>Smooth</string>
-             </property>
-             <property name="checked">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="QCheckBox" name="cbProtos">
-             <property name="text">
-              <string>Use prototypes</string>
-             </property>
-             <property name="checked">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="2">
-            <widget class="QCheckBox" name="cbErosion">
-             <property name="text">
-              <string>Erosion</string>
-             </property>
-             <property name="checked">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1">
-            <widget class="QCheckBox" name="cbAveraging">
-             <property name="text">
-              <string>Average prototypes</string>
-             </property>
-             <property name="checked">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="0">
-            <widget class="QCheckBox" name="cbLossy">
-             <property name="text">
-              <string>Lossy</string>
-             </property>
-             <property name="checked">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item row="4" column="0" colspan="2">
-         <widget class="QGroupBox" name="gbLogging">
-          <property name="title">
-           <string>Logging</string>
-          </property>
-          <layout class="QHBoxLayout" name="horizontalLayout_10">
-           <item>
-            <widget class="QCheckBox" name="cbReport">
-             <property name="text">
-              <string>Report progress</string>
-             </property>
-             <property name="checked">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QCheckBox" name="cbWarnings">
-             <property name="text">
-              <string>Show libTiff warnings</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QCheckBox" name="cbVerbose">
-             <property name="text">
-              <string>Verbose</string>
+              <string>&amp;Reset to default</string>
              </property>
             </widget>
            </item>
@@ -551,7 +651,7 @@
            <item>
             <widget class="QCheckBox" name="cbOldMinidjvu">
              <property name="text">
-              <string>binary doesn't support new options</string>
+              <string>Executable doesn't support new options</string>
              </property>
             </widget>
            </item>
@@ -712,7 +812,7 @@
        <item>
         <widget class="QPushButton" name="btnConvert">
          <property name="text">
-          <string>Convert</string>
+          <string>Con&amp;vert</string>
          </property>
         </widget>
        </item>

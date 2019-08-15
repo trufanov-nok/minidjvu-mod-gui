@@ -61,7 +61,11 @@ private slots:
 
     void on_tabWidget_currentChanged(int index);
 
-    void on_rbIndirectDoc_toggled(bool checked);
+    void on_btnOptReset_clicked();
+
+    void on_cbProtos_stateChanged(int arg1);
+
+    void on_cbMatch_stateChanged(int arg1);
 
 private:
     void displayOpts();

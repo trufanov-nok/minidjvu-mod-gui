@@ -5,6 +5,7 @@
 #include <QMessageBox>
 #include <QThread>
 #include <QTime>
+#include <QIntValidator>
 
 Options init_options() {
     Options opt;
@@ -35,8 +36,8 @@ Settings init_settings()
 
 QString opt2cmd(const Options& opt, bool is_new = true) {
 
-    QString res("-d %1 -p %2 -a %3 ");
-    res = res.arg(opt.dpi).arg(opt.pagesPerDict).arg(opt.agression);
+    QString res("-d %1 -p %2 ");
+    res = res.arg(opt.dpi).arg(opt.pagesPerDict);
 
     if (is_new && opt.threads) {
         res += "-t " + QString::number(opt.threads) + " ";
@@ -60,9 +61,16 @@ QString opt2cmd(const Options& opt, bool is_new = true) {
         if (opt.clean)     res += "-c ";
         if (opt.match)     res += "-m ";
         if (opt.smooth)    res += "-s ";
-        if (!opt.protos)   res += "-n ";
-        if (opt.averaging) res += "-A ";
         if (opt.erosion)   res += "-e ";
+
+        if (!opt.protos) {
+            res += "-n ";
+        } else if (opt.averaging)
+            res += "-A ";
+    }
+
+    if (opt.lossy || opt.match) {
+        res += QString("-a %1 ").arg(opt.agression);
     }
 
     if (opt.report)   res += "-r ";
@@ -82,6 +90,11 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     ui->tabWidget->setCurrentIndex(0);
+    QIntValidator * validator = new QIntValidator(5, 10000, this);
+    ui->edDPI->setValidator(validator);
+    ui->edPagesPerDict->setValidator(validator);
+    ui->edMaxThreads->setValidator(validator);
+
     m_set = init_settings();
     m_opt = init_options();
     displaySettings();
@@ -105,20 +118,47 @@ MainWindow::MainWindow(QWidget *parent) :
     });
 
     connect(&m_proc, &QProcess::readyRead, [=]() {
-        ui->textLog->appendPlainText(m_proc.readAll());
+        QString val(m_proc.readAll());
+        ui->textLog->appendPlainText(val);
+        for (QString s: val.split("\n", QString::SkipEmptyParts)) {
+            if (s.startsWith("Saving") && s.endsWith("completed")) {
+                ui->progressBar->setValue(ui->progressBar->value()+1);
+            }
+        }
     });
 
     connect(&m_proc, qOverload<int>(&QProcess::finished), [=](int exitCode) {
         QTime t(0,0);
         t = t.addMSecs(m_timer.elapsed());
         ui->textLog->appendPlainText(tr("Process finished with exit code: %1").arg(exitCode));
+
         QString time = t.toString("ss.zzz") + tr(" sec.");
         if (t.minute()) time += t.toString("mm") + tr(" min. ");
         if (t.hour()) time += t.toString("HH") + tr(" h. ");
-        ui->textLog->appendPlainText(tr("Elapsed time: %1\n=============================").arg(time));
+        ui->textLog->appendPlainText(tr("Elapsed time: %1").arg(time));
 
+        QFileInfo fi(m_proc.arguments().last());
+        if (fi.exists()) {
+            QString size;
+            const double size_b = fi.size();
+            const double size_k = size_b / 1024.;
+            const double size_m = size_k / 1024.;
+
+            if (size_m > 1) {
+                size = QString::number(size_m, 'f', 2) + "MiB";
+            } else if (size_k > 1) {
+                size = QString::number(size_k, 'f', 2) + "KiB";
+            } else
+                size = QString::number(size_b) + " bytes";
+
+            ui->textLog->appendPlainText(tr("Output file size: %1").arg( size ));
+        }
+
+        ui->progressBar->setValue(ui->progressBar->maximum());
         ui->btnConvert->disconnect();
         displayStartProcessMode();
+
+        QMessageBox::information(this, tr("Conversion"), tr("Operation completed."));
     });
 
     displayStartProcessMode();
@@ -139,26 +179,39 @@ void MainWindow::displayStartProcessMode()
     ui->btnConvert->setText(tr("&Convert"));
 
     connect(ui->btnConvert, &QPushButton::clicked, [=](){
-      ui->progressBar->setValue(0);
+        ui->progressBar->setValue(0);
 
-      updateSettings();
-      updateOpts();
+        updateSettings();
+        updateOpts();
 
-      QStringList opts (opt2cmd(m_opt, !m_set.isOldBin).split(" ", QString::SkipEmptyParts));
+        if (!ui->listInputFiles->count()) {
+            QMessageBox::critical(this, tr("Conversion"), tr("Please select some images to convert!"));
+            return;
+        }
 
-      for(int i = 0; i < ui->listInputFiles->count(); ++i) {
-          opts.append(ui->listInputFiles->item(i)->data(Qt::UserRole).toString());
-      }
+        if (ui->edTargetFile->text().isEmpty()) {
+            QMessageBox::critical(this, tr("Conversion"), tr("Please enter a target filename!"));
+            return;
+        }
 
-      opts.append(ui->edTargetFile->text());
 
-      m_proc.setArguments(opts);
-      m_proc.setProcessChannelMode(QProcess::ProcessChannelMode::MergedChannels);
-      m_proc.setProgram(m_set.path2Bin);
-      m_proc.setArguments(opts);
-      ui->textLog->appendPlainText(tr("Command line: \"%1\"").arg(
-                                       m_proc.program() + " " + m_proc.arguments().join(" ")));
-      m_proc.start(QIODevice::ReadOnly);
+        QStringList opts (opt2cmd(m_opt, !m_set.isOldBin).split(" ", QString::SkipEmptyParts));
+
+        for(int i = 0; i < ui->listInputFiles->count(); ++i) {
+            opts.append(ui->listInputFiles->item(i)->data(Qt::UserRole).toString());
+        }
+
+        ui->progressBar->setMaximum(ui->listInputFiles->count());
+
+        opts.append(ui->edTargetFile->text());
+
+        m_proc.setArguments(opts);
+        m_proc.setProcessChannelMode(QProcess::ProcessChannelMode::MergedChannels);
+        m_proc.setProgram(m_set.path2Bin);
+        m_proc.setArguments(opts);
+        ui->textLog->appendPlainText(tr("Command line: \"%1\"").arg(
+                                         m_proc.program() + " " + m_proc.arguments().join(" ")));
+        m_proc.start(QIODevice::ReadOnly);
     });
 
 }
@@ -207,19 +260,11 @@ void MainWindow::on_btnOpenFiles_clicked()
 
 void MainWindow::on_btnSaveFile_clicked()
 {
-    if (ui->rbBundledDoc->isChecked()) {
-        QString res = QFileDialog::getSaveFileName(this, "Select target document", "", "*djvu *.djv");
-        if (!res.isEmpty()) {
-            QFileInfo fi(res);
-            if (fi.completeSuffix().isEmpty()) res += ".djvu";
-            ui->edTargetFile->setText(res);
-        }
-    } else {
-        QString res = QFileDialog::getExistingDirectory(this, "Save indirect document to directory");
-        if (!res.isEmpty()) {
-            if (!res.endsWith(QDir::separator())) res += QDir::separator();
-            ui->edTargetFile->setText(res);
-        }
+    QString res = QFileDialog::getSaveFileName(this, "Select target document", "", "*djvu *.djv");
+    if (!res.isEmpty()) {
+        QFileInfo fi(res);
+        if (fi.completeSuffix().isEmpty()) res += ".djvu";
+        ui->edTargetFile->setText(res);
     }
 }
 
@@ -277,6 +322,7 @@ void MainWindow::updateOpts()
     m_opt.report = ui->cbReport->isChecked();
     m_opt.warnings = ui->cbWarnings->isChecked();
     m_opt.verbose = ui->cbVerbose->isChecked();
+    m_opt.indirect = ui->rbIndirectDoc->isChecked();
 }
 
 void MainWindow::displaySettings()
@@ -320,21 +366,6 @@ void MainWindow::on_btnClearLog_clicked()
     ui->textLog->clear();
 }
 
-void MainWindow::on_rbIndirectDoc_toggled(bool checked)
-{
-    if (checked) {
-        ui->gbOutput->setTitle(tr("Set output path:"));
-        QString path(ui->edTargetFile->text());
-        path = QFileInfo(path).path();
-        if (!path.endsWith(QDir::separator())) path += QDir::separator();
-        ui->edTargetFile->setText(path);
-    } else {
-        ui->gbOutput->setTitle(tr("Set output file:"));
-    }
-}
-
-
-
 void MainWindow::on_tabWidget_currentChanged(int index)
 {
     QWidget* selected = ui->tabWidget->widget(index);
@@ -355,4 +386,20 @@ void MainWindow::on_tabWidget_currentChanged(int index)
         ui->edMaxThreads->setEnabled(!is_old_bin);
         ui->cbClassifier->setEnabled(!is_old_bin);
     }
+}
+
+void MainWindow::on_btnOptReset_clicked()
+{
+    init_options();
+    displayOpts();
+}
+
+void MainWindow::on_cbProtos_stateChanged(int arg1)
+{
+    ui->cbAveraging->setEnabled(arg1);
+}
+
+void MainWindow::on_cbMatch_stateChanged(int arg1)
+{
+    ui->sbAgression->setEnabled(arg1);
 }
