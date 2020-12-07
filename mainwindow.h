@@ -67,6 +67,8 @@ private slots:
 
     void on_cbMatch_stateChanged(int arg1);
 
+    void on_edPath2Bin_textChanged(const QString &arg1);
+
 private:
     void displayOpts();
     void displaySettings();
@@ -74,6 +76,7 @@ private:
     void updateSettings();
     void displayStopProcessMode();
     void displayStartProcessMode();
+    void getEncoderDetails();
 private:
     Ui::MainWindow *ui;
     Settings m_set;
