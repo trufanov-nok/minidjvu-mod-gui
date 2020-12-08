@@ -6,6 +6,8 @@
 #include <QThread>
 #include <QTime>
 #include <QIntValidator>
+#include <QDebug>
+#include <QRegularExpression>
 
 Options init_options() {
     Options opt;
@@ -23,64 +25,55 @@ Options init_options() {
     opt.report = true;
     opt.warnings = opt.verbose = false;
     opt.indirect = false;
+    opt.unbuffered = true;
     return opt;
 }
 
 Settings init_settings()
 {
     Settings set;
-    set.path2Bin = "/home/truf/dev/minidjvu/minidjvu";
-    set.isOldBin = false;
+#ifdef __linux
+    set.path2Bin = "/usr/bin/minidjvu-mod";
+#else
+    set.path2Bin = "bin/minidjvu-mod";
+#endif
     return set;
 }
 
-QString opt2cmd(const Options& opt, bool is_new = true) {
-
-    QString res("-d %1 -p %2 ");
-    res = res.arg(opt.dpi).arg(opt.pagesPerDict);
-
-    if (is_new && opt.threads) {
-        res += "-t " + QString::number(opt.threads) + " ";
-    }
-
-    if (is_new && opt.classifier) {
-        res += "-C " + QString::number(opt.classifier) + " ";
-    }
-
-    if (opt.indirect) {
-        res += "-i ";
-    }
-
-    if (!opt.ext.isEmpty()) {
-        res += "-X " + opt.ext;
-    }
-
-    if (opt.lossy) {
-        res += "-l ";
+QString add_opt(const QChar& c, QString val, const QSet<QChar>& supported, bool condition = true)
+{
+    if (supported.contains(c) && condition) {
+        return QString(" -%1 %2").arg(c).arg(val);
     } else {
-        if (opt.clean)     res += "-c ";
-        if (opt.match)     res += "-m ";
-        if (opt.smooth)    res += "-s ";
-        if (opt.erosion)   res += "-e ";
-
-        if (!opt.protos) {
-            res += "-n ";
-        } else if (opt.averaging)
-            res += "-A ";
+        return QString();
     }
+}
 
-    if (opt.lossy || opt.match) {
-        res += QString("-a %1 ").arg(opt.agression);
-    }
+QString opt2cmd(const Options& opt, const QSet<QChar>& supported)
+{
+    QString res;
+    res += add_opt('d', QString::number(opt.dpi), supported);
+    res += add_opt('p', QString::number(opt.pagesPerDict), supported);
+    res += add_opt('t', QString::number(opt.threads), supported);
+    res += add_opt('C', QString::number(opt.classifier), supported);
+    res += add_opt('i', "", supported, opt.indirect);
+    res += add_opt('X', opt.ext, supported, !opt.ext.isEmpty());
+    res += add_opt('l', "", supported, opt.lossy);
+    res += add_opt('c', "", supported, !opt.lossy && opt.clean);
+    res += add_opt('m', "", supported, !opt.lossy && opt.match);
+    res += add_opt('s', "", supported, !opt.lossy && opt.smooth);
+    res += add_opt('e', "", supported, !opt.lossy && opt.erosion);
+    res += add_opt('n', "", supported, !opt.lossy && !opt.protos);
+    res += add_opt('A', "", supported, !opt.lossy && opt.protos && opt.averaging);
 
-    if (opt.report)   res += "-r ";
-    if (opt.warnings) res += "-w ";
-    if (opt.verbose)  res += "-v ";
+    res += add_opt('a', QString::number(opt.agression), supported, opt.lossy || opt.match);
+    res += add_opt('r', "", supported, opt.report);
+    res += add_opt('w', "", supported, opt.warnings);
+    res += add_opt('v', "", supported, opt.verbose);
+    res += add_opt('u', "", supported, opt.unbuffered);
 
     return res;
 }
-
-#include <QtGlobal>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -98,11 +91,11 @@ MainWindow::MainWindow(QWidget *parent) :
     m_set = init_settings();
     m_opt = init_options();
     displaySettings();
+    filterSupportedOpts();
     displayOpts();
 
-
     connect(&m_proc, &QProcess::errorOccurred, this, [=](QProcess::ProcessError error) {
-        ui->textLog->appendPlainText(tr("Process error: %1").arg(error));
+        addToLog(tr("Process error: %1").arg(error));
 
         ui->btnConvert->disconnect();
         displayStartProcessMode();
@@ -111,7 +104,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(&m_proc, &QProcess::started, this, [=]() {
         m_timer.start();
-        ui->textLog->appendPlainText(tr("Process started"));
+        addToLog(tr("Process started"));
 
         ui->btnConvert->disconnect();
         displayStopProcessMode();
@@ -119,7 +112,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(&m_proc, &QProcess::readyRead, this, [=]() {
         QString val(m_proc.readAll());
-        ui->textLog->appendPlainText(val);
+        addToLog(val);
+
         const QStringList sl = val.split("\n", Qt::SkipEmptyParts);
         for (const QString& s: sl) {
             if (s.startsWith(tr("Saving")) && s.endsWith(tr("completed"))) {
@@ -132,12 +126,12 @@ MainWindow::MainWindow(QWidget *parent) :
             this, [=](int exitCode,  QProcess::ExitStatus /*exitStatus*/) {
         QTime t(0,0);
         t = t.addMSecs(m_timer.elapsed());
-        ui->textLog->appendPlainText(tr("Process finished with exit code: %1").arg(exitCode));
+        addToLog(tr("Process finished with exit code: %1").arg(exitCode));
 
         QString time = t.toString("ss.zzz") + tr(" sec.");
         if (t.minute()) time += t.toString("mm") + tr(" min. ");
         if (t.hour()) time += t.toString("HH") + tr(" h. ");
-        ui->textLog->appendPlainText(tr("Elapsed time: %1").arg(time));
+        addToLog(tr("Elapsed time: %1").arg(time));
 
         QFileInfo fi(m_proc.arguments().constLast());
         if (fi.exists()) {
@@ -153,8 +147,9 @@ MainWindow::MainWindow(QWidget *parent) :
             } else
                 size = QString::number(size_b) + " bytes";
 
-            ui->textLog->appendPlainText(tr("Output file size: %1").arg( size ));
+            addToLog(tr("Output file size: %1").arg( size ));
         }
+        ui->textLog->ensureCursorVisible();
 
         ui->progressBar->setValue(ui->progressBar->maximum());
         ui->btnConvert->disconnect();
@@ -215,7 +210,7 @@ void MainWindow::displayStartProcessMode()
         }
 
 
-        QStringList opts (opt2cmd(m_opt, !m_set.isOldBin).split(" ", Qt::SkipEmptyParts));
+        QStringList opts (opt2cmd(m_opt, m_supportedOpts).split(" ", Qt::SkipEmptyParts));
 
         for(int i = 0; i < ui->listInputFiles->count(); ++i) {
             opts.append(ui->listInputFiles->item(i)->data(Qt::UserRole).toString());
@@ -231,11 +226,11 @@ void MainWindow::displayStartProcessMode()
         m_proc.setArguments(opts);
 
         if (!ui->textLog->document()->isEmpty()) {
-            ui->textLog->appendPlainText("===\n\n");
+            addToLog("===\n\n");
         }
 
-        ui->textLog->appendPlainText(tr("Command line: \"%1\"").arg(
-                                         m_proc.program() + " " + m_proc.arguments().join(" ")));
+        addToLog(tr("Command line: \"%1\"").arg(
+                     m_proc.program() + " " + m_proc.arguments().join(" ")));
         m_proc.start(QProcess::Unbuffered|QProcess::ReadOnly);
     });
 
@@ -293,23 +288,48 @@ void MainWindow::on_btnSaveFile_clicked()
     }
 }
 
+void enable_if_supported(QWidget* w, const QChar& c, const QSet<QChar> supported)
+{
+    if (w) {
+        w->setEnabled(supported.contains(c));
+    }
+}
+
+void MainWindow::filterSupportedOpts()
+{
+    qDebug() << m_supportedOpts;
+    enable_if_supported(ui->edDPI, 'd', m_supportedOpts);
+    enable_if_supported(ui->edMaxThreads, 't', m_supportedOpts);
+    enable_if_supported(ui->edPagesPerDict, 'p', m_supportedOpts);
+    enable_if_supported(ui->cbClassifier, 'C', m_supportedOpts);
+    enable_if_supported(ui->sbAgression, 'a', m_supportedOpts);
+    enable_if_supported(ui->edExt, 'X', m_supportedOpts);
+    enable_if_supported(ui->cbLossy, 'l', m_supportedOpts);
+    enable_if_supported(ui->cbClean, 'c', m_supportedOpts);
+    enable_if_supported(ui->cbMatch, 'm', m_supportedOpts);
+    enable_if_supported(ui->cbSmooth, 's', m_supportedOpts);
+    enable_if_supported(ui->cbProtos, 'n', m_supportedOpts);
+    enable_if_supported(ui->cbAveraging, 'A', m_supportedOpts);
+    enable_if_supported(ui->cbErosion, 'e', m_supportedOpts);
+    enable_if_supported(ui->cbReport, 'r', m_supportedOpts);
+    enable_if_supported(ui->cbWarnings, 'w', m_supportedOpts);
+    enable_if_supported(ui->cbVerbose, 'v', m_supportedOpts);
+    enable_if_supported(ui->rbIndirectDoc, 'i', m_supportedOpts);
+    enable_if_supported(ui->rbBundledDoc, 'i', m_supportedOpts);
+}
+
 void MainWindow::displayOpts()
 {
     ui->edDPI->setText(QString::number(m_opt.dpi));
-
-    ui->edMaxThreads->setEnabled(!m_set.isOldBin);
     ui->edMaxThreads->setText(QString::number(m_opt.threads));
-
     ui->edPagesPerDict->setText(QString::number(m_opt.pagesPerDict));
-
-    ui->cbClassifier->setEnabled(!m_set.isOldBin);
     ui->cbClassifier->setCurrentIndex(m_opt.classifier-1);
-
     ui->sbAgression->setValue(m_opt.agression);
     ui->edExt->setText(m_opt.ext);
-
     ui->cbLossy->setChecked(m_opt.lossy);
+
     emit ui->cbLossy->stateChanged(m_opt.lossy);
+
     if (!m_opt.lossy) {
         ui->cbClean->setChecked(m_opt.clean);
         ui->cbMatch->setChecked(m_opt.match);
@@ -361,17 +381,19 @@ void MainWindow::updateOpts()
 void MainWindow::displaySettings()
 {
     ui->edPath2Bin->setText(m_set.path2Bin);
-    ui->cbOldMinidjvu->setChecked(m_set.isOldBin);
 }
 
 void MainWindow::updateSettings()
 {
     m_set.path2Bin = ui->edPath2Bin->text();
-    m_set.isOldBin = ui->cbOldMinidjvu->isChecked();
 }
 
 void MainWindow::on_cbLossy_stateChanged(int arg1)
 {
+    if (!m_supportedOpts.contains('l')) {
+        return;
+    }
+
     if (arg1) {
         ui->cbClean->setChecked(true);
         ui->cbMatch->setChecked(true);
@@ -381,12 +403,12 @@ void MainWindow::on_cbLossy_stateChanged(int arg1)
         ui->cbErosion->setChecked(true);
     }
 
-    ui->cbClean->setEnabled(!arg1);
-    ui->cbMatch->setEnabled(!arg1);
-    ui->cbSmooth->setEnabled(!arg1);
-    ui->cbProtos->setEnabled(!arg1);
-    ui->cbAveraging->setEnabled(!arg1);
-    ui->cbErosion->setEnabled(!arg1);
+    ui->cbClean->setEnabled(!arg1 && m_supportedOpts.contains('c'));
+    ui->cbMatch->setEnabled(!arg1 && m_supportedOpts.contains('m'));
+    ui->cbSmooth->setEnabled(!arg1 && m_supportedOpts.contains('s'));
+    ui->cbProtos->setEnabled(!arg1 && m_supportedOpts.contains('n'));
+    ui->cbAveraging->setEnabled(!arg1 && m_supportedOpts.contains('A'));
+    ui->cbErosion->setEnabled(!arg1 && m_supportedOpts.contains('e'));
 }
 
 void MainWindow::on_label_7_linkActivated(const QString &/*link*/)
@@ -402,16 +424,53 @@ void MainWindow::on_btnClearLog_clicked()
 void MainWindow::getEncoderDetails()
 {
     updateSettings();
+    m_supportedOpts.clear();
     QProcess proc(this);
     proc.start(m_set.path2Bin, QStringList());
     proc.waitForFinished(2000);
-    QString output(proc.readAllStandardOutput());
-    const int pos = output.indexOf(" ") + 1;
-    QString ver = output.mid(pos, output.indexOf(" ", pos) - pos);
-    if (ver.isEmpty()) {
-        ver = tr("! can't be found !");
+
+    const QString output(proc.readAllStandardOutput());
+
+    // Let's grep the minidjvu version
+    QRegularExpression re(".*minidjvu[mod-]* ([0-9.a-zA-Z]+) - .*");
+    QRegularExpressionMatch match = re.match(output);
+    QString version;
+
+    if (match.hasMatch() && match.lastCapturedIndex() > 0) {
+        version = match.captured(1);
+    } else {
+
+        //"Предупреждение: версии программы и библиотеки не совпадают:
+        //program version 0.9, library version 0.9m01."
+        re.setPattern(".*program version ([0-9.a-zA-Z]+, library version [0-9.a-zA-Z]+)\\..*");
+        match = re.match(output);
+        if (match.hasMatch() && match.lastCapturedIndex() > 0) {
+            version = match.captured(1);
+        } else {
+            version = tr("! can't be found !");
+        }
     }
-    ui->lblBinVer->setText(tr("Detected minidjvu version: <i>%1</i>").arg(ver));
+
+    QString supported_opts;
+
+    const QStringList sl(output.split('\n'));
+    if (!sl.isEmpty()) {
+        for (const QString& s: sl) {
+            const QString trimmed = s.trimmed();
+            if (trimmed.startsWith("-") && trimmed.length() > 2) {
+                supported_opts += QString("-%1 ").arg(trimmed[1]);
+                m_supportedOpts += trimmed[1];
+            }
+        }
+    }
+
+    ui->lblBinVer->setText(tr("Detected minidjvu version: <i>%1</i>").arg(version));
+    if (!supported_opts.isEmpty()) {
+        ui->lblBinVer->setText(tr("%1<br>Supported options: %2").arg(ui->lblBinVer->text()).arg(supported_opts));
+    }
+
+    filterSupportedOpts();
+    displayOpts();
 }
 
 void MainWindow::on_tabWidget_currentChanged(int index)
@@ -420,29 +479,42 @@ void MainWindow::on_tabWidget_currentChanged(int index)
     if (ui->tabSettings == selected) {
         getEncoderDetails();
     } else if (ui->tabOptions == selected) {
-        const bool is_old_bin = ui->cbOldMinidjvu->isChecked();
-        ui->edMaxThreads->setEnabled(!is_old_bin);
-        ui->cbClassifier->setEnabled(!is_old_bin);
+        filterSupportedOpts();
+        displayOpts();
     }
 }
 
 void MainWindow::on_btnOptReset_clicked()
 {
     init_options();
+    filterSupportedOpts();
     displayOpts();
 }
 
 void MainWindow::on_cbProtos_stateChanged(int arg1)
 {
-    ui->cbAveraging->setEnabled(arg1);
+    if (m_supportedOpts.contains('A')) {
+        ui->cbAveraging->setEnabled(arg1);
+    }
 }
 
 void MainWindow::on_cbMatch_stateChanged(int arg1)
 {
-    ui->sbAgression->setEnabled(arg1);
+    if (m_supportedOpts.contains('a')) {
+        ui->sbAgression->setEnabled(arg1);
+    }
 }
 
 void MainWindow::on_edPath2Bin_textChanged(const QString &/*arg1*/)
 {
     getEncoderDetails();
+}
+
+void MainWindow::addToLog(const QString& txt)
+{
+    ui->textLog->appendPlainText(txt);
+    if (ui->textLog->verticalScrollBar()) {
+        ui->textLog->moveCursor(QTextCursor::End);
+        ui->textLog->ensureCursorVisible();
+    }
 }

@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QProcess>
 #include <QElapsedTimer>
+#include <QSet>
 
 namespace Ui {
 class MainWindow;
@@ -11,7 +12,6 @@ class MainWindow;
 
 struct Settings {
     QString path2Bin;
-    bool isOldBin;
 };
 
 struct Options {
@@ -32,6 +32,7 @@ struct Options {
     bool warnings;
     bool verbose;
     bool indirect;
+    bool unbuffered;
 };
 
 class MainWindow : public QMainWindow
@@ -70,6 +71,8 @@ private slots:
     void on_edPath2Bin_textChanged(const QString &arg1);
 
 private:
+    void addToLog(const QString &txt);
+    void filterSupportedOpts();
     void displayOpts();
     void displaySettings();
     void updateOpts();
@@ -83,6 +86,7 @@ private:
     Options m_opt;
     QProcess m_proc;
     QElapsedTimer m_timer;
+    QSet<QChar> m_supportedOpts;
 };
 
 #endif // MAINWINDOW_H
