@@ -87,6 +87,7 @@ private:
     QProcess m_proc;
     QElapsedTimer m_timer;
     QSet<QChar> m_supportedOpts;
+    QWidget* m_ptrPreviousTab;
 };
 
 #endif // MAINWINDOW_H

@@ -79,10 +79,11 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
     m_proc(this)
-
 {
     ui->setupUi(this);
     ui->tabWidget->setCurrentIndex(0);
+    m_ptrPreviousTab = ui->tabWidget->widget(0);
+
     QIntValidator * validator = new QIntValidator(5, 10000, this);
     ui->edDPI->setValidator(validator);
     ui->edPagesPerDict->setValidator(validator);
@@ -423,6 +424,7 @@ void MainWindow::on_btnClearLog_clicked()
 
 void MainWindow::getEncoderDetails()
 {
+    ui->btnConvert->setEnabled(true);
     updateSettings();
     m_supportedOpts.clear();
     QProcess proc(this);
@@ -439,7 +441,6 @@ void MainWindow::getEncoderDetails()
     if (match.hasMatch() && match.lastCapturedIndex() > 0) {
         version = match.captured(1);
     } else {
-
         //"Предупреждение: версии программы и библиотеки не совпадают:
         //program version 0.9, library version 0.9m01."
         re.setPattern(".*program version ([0-9.a-zA-Z]+, library version [0-9.a-zA-Z]+)\\..*");
@@ -448,6 +449,7 @@ void MainWindow::getEncoderDetails()
             version = match.captured(1);
         } else {
             version = tr("! can't be found !");
+            ui->btnConvert->setEnabled(false);
         }
     }
 
@@ -475,10 +477,16 @@ void MainWindow::getEncoderDetails()
 
 void MainWindow::on_tabWidget_currentChanged(int index)
 {
-    QWidget* selected = ui->tabWidget->widget(index);
-    if (ui->tabSettings == selected) {
+    QWidget* new_tab = ui->tabWidget->widget(index);
+
+    if (m_ptrPreviousTab == ui->tabOptions) {
+        updateOpts();
+    }
+    m_ptrPreviousTab = new_tab;
+
+    if (ui->tabSettings == new_tab) {
         getEncoderDetails();
-    } else if (ui->tabOptions == selected) {
+    } else if (ui->tabOptions == new_tab) {
         filterSupportedOpts();
         displayOpts();
     }
