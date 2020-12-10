@@ -6,8 +6,8 @@
 #include <QThread>
 #include <QTime>
 #include <QIntValidator>
-#include <QDebug>
 #include <QRegularExpression>
+#include <QDebug>
 
 Options init_options() {
     Options opt;
@@ -78,7 +78,8 @@ QString opt2cmd(const Options& opt, const QSet<QChar>& supported)
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    m_proc(this)
+    m_proc(this),
+    m_conversion_in_progress(false)
 {
     ui->setupUi(this);
     ui->tabWidget->setCurrentIndex(0);
@@ -95,146 +96,91 @@ MainWindow::MainWindow(QWidget *parent) :
     filterSupportedOpts();
     displayOpts();
 
-    connect(&m_proc, &QProcess::errorOccurred, this, [=](QProcess::ProcessError error) {
-        addToLog(tr("Process error: %1").arg(error));
+#if QT_VERSION >= 0x050600
+    connect(&m_proc, SIGNAL(errorOccurred(QProcess::ProcessError)), this, SLOT(process_error(QProcess::ProcessError)));
+#else
+    connect(&m_proc, SIGNAL(error(QProcess::ProcessError)), this, SLOT(process_error(QProcess::ProcessError)));
+#endif
 
-        ui->btnConvert->disconnect();
-        displayStartProcessMode();
-    });
-
-
-    connect(&m_proc, &QProcess::started, this, [=]() {
-        m_timer.start();
-        addToLog(tr("Process started"));
-
-        ui->btnConvert->disconnect();
-        displayStopProcessMode();
-    });
-
-    connect(&m_proc, &QProcess::readyRead, this, [=]() {
-        QString val(m_proc.readAll());
-        addToLog(val);
-
-        const QStringList sl = val.split("\n", Qt::SkipEmptyParts);
-        for (const QString& s: sl) {
-            if (s.startsWith(tr("Saving")) && s.endsWith(tr("completed"))) {
-                ui->progressBar->setValue(ui->progressBar->value()+1);
-            }
-        }
-    });
-
-    connect(&m_proc, qOverload<int, QProcess::ExitStatus>(&QProcess::finished),
-            this, [=](int exitCode,  QProcess::ExitStatus /*exitStatus*/) {
-        QTime t(0,0);
-        t = t.addMSecs(m_timer.elapsed());
-        addToLog(tr("Process finished with exit code: %1").arg(exitCode));
-
-        QString time = t.toString("ss.zzz") + tr(" sec.");
-        if (t.minute()) time += t.toString("mm") + tr(" min. ");
-        if (t.hour()) time += t.toString("HH") + tr(" h. ");
-        addToLog(tr("Elapsed time: %1").arg(time));
-
-        QFileInfo fi(m_proc.arguments().constLast());
-        if (fi.exists()) {
-            QString size;
-            const double size_b = fi.size();
-            const double size_k = size_b / 1024.;
-            const double size_m = size_k / 1024.;
-
-            if (size_m > 1) {
-                size = QString::number(size_m, 'f', 2) + "MiB";
-            } else if (size_k > 1) {
-                size = QString::number(size_k, 'f', 2) + "KiB";
-            } else
-                size = QString::number(size_b) + " bytes";
-
-            addToLog(tr("Output file size: %1").arg( size ));
-        }
-        ui->textLog->ensureCursorVisible();
-
-        ui->progressBar->setValue(ui->progressBar->maximum());
-        ui->btnConvert->disconnect();
-        displayStartProcessMode();
-
-        QMessageBox::information(this, tr("Conversion"), tr("Operation completed."));
-    });
+    connect(&m_proc, SIGNAL(started()), this, SLOT(process_started()));
+    connect(&m_proc, SIGNAL(readyRead()), this, SLOT(process_ready_read()));
+    connect(&m_proc, SIGNAL(finished(int)), this, SLOT(process_finished(int)));
 
     displayStartProcessMode();
 }
 
-void MainWindow::displayStopProcessMode()
+void MainWindow::process_error(QProcess::ProcessError error)
 {
-    ui->btnConvert->setText(tr("&Stop"));
+    addToLog(tr("Process error: %1").arg(error));
+    displayStartProcessMode();
+}
 
-    connect(ui->btnConvert, &QPushButton::clicked, this, [=](){
-       m_proc.kill();
-       ui->progressBar->setValue(0);
-    });
+void MainWindow::process_started()
+{
+    m_timer.start();
+    addToLog(tr("Process started"));
+
+    ui->btnConvert->setText(tr("&Stop"));
+    m_conversion_in_progress = true;
+}
+
+void MainWindow::process_ready_read()
+{
+    QString val(m_proc.readAll());
+    addToLog(val);
+#if QT_VERSION >= 0x050E00
+    const QStringList sl = val.split("\n", Qt::SkipEmptyParts);
+#else
+    const QStringList sl = val.split("\n", QString::SkipEmptyParts);
+#endif
+    for (const QString& s: sl) {
+        if (s.startsWith("[") && s.endsWith("%]")) {
+            qDebug() << s.mid(1,s.length()-3).toFloat();
+            float progress = s.mid(1,s.length()-3).toFloat() /100.;
+            ui->progressBar->setValue(ui->progressBar->maximum()*progress);
+        }
+    }
+}
+void MainWindow::process_finished(int exitCode)
+{
+    QTime t(0,0);
+    t = t.addMSecs(m_timer.elapsed());
+    addToLog(tr("Process finished with exit code: %1").arg(exitCode));
+
+    QString time = t.toString("ss.zzz") + tr(" sec.");
+    if (t.minute()) time += t.toString("mm") + tr(" min. ");
+    if (t.hour()) time += t.toString("HH") + tr(" h. ");
+    addToLog(tr("Elapsed time: %1").arg(time));
+
+    const QStringList args = m_proc.arguments();
+    QFileInfo fi(args.last());
+    if (fi.exists()) {
+        QString size;
+        const double size_b = fi.size();
+        const double size_k = size_b / 1024.;
+        const double size_m = size_k / 1024.;
+
+        if (size_m > 1) {
+            size = QString::number(size_m, 'f', 2) + "MiB";
+        } else if (size_k > 1) {
+            size = QString::number(size_k, 'f', 2) + "KiB";
+        } else
+            size = QString::number(size_b) + " bytes";
+
+        addToLog(tr("Output file size: %1").arg( size ));
+    }
+    ui->textLog->ensureCursorVisible();
+
+    ui->progressBar->setValue(ui->progressBar->maximum());
+    displayStartProcessMode();
+
+    QMessageBox::information(this, tr("Conversion"), tr("Operation completed."));
 }
 
 void MainWindow::displayStartProcessMode()
 {
     ui->btnConvert->setText(tr("&Convert"));
-
-    connect(ui->btnConvert, &QPushButton::clicked, this, [=](){
-        ui->progressBar->setValue(0);
-
-        updateSettings();
-        updateOpts();
-
-        if (!ui->listInputFiles->count()) {
-            QMessageBox::critical(this, tr("Conversion"), tr("Please select some images to convert!"));
-            return;
-        }
-
-        if (ui->edTargetFile->text().isEmpty()) {
-            QMessageBox::critical(this, tr("Conversion"), tr("Please enter a target filename!"));
-            return;
-        }
-
-        QFileInfo fi(ui->edTargetFile->text());
-        const QString ext = fi.suffix().toLower();
-        if (ext != "djvu" && ext != "djv") {
-            if (QMessageBox::question(this, tr("Conversion"), tr("Target filename must have .djvu or .djv extension!\nAdd \".djvu\" to filename and continue?")) !=
-                    QMessageBox::StandardButton::Yes) {
-                return;
-            }
-            ui->edTargetFile->setText(ui->edTargetFile->text() + ".djvu");
-            fi.setFile(ui->edTargetFile->text());
-        }
-
-        if (fi.exists()) {
-            if (QMessageBox::question(this, tr("Conversion"), tr("Target file already exists! Continue?")) !=
-                    QMessageBox::StandardButton::Yes) {
-                return;
-            }
-        }
-
-
-        QStringList opts (opt2cmd(m_opt, m_supportedOpts).split(" ", Qt::SkipEmptyParts));
-
-        for(int i = 0; i < ui->listInputFiles->count(); ++i) {
-            opts.append(ui->listInputFiles->item(i)->data(Qt::UserRole).toString());
-        }
-
-        ui->progressBar->setMaximum(ui->listInputFiles->count());
-
-        opts.append(ui->edTargetFile->text());
-
-        m_proc.setArguments(opts);
-        m_proc.setProcessChannelMode(QProcess::ProcessChannelMode::MergedChannels);
-        m_proc.setProgram(m_set.path2Bin);
-        m_proc.setArguments(opts);
-
-        if (!ui->textLog->document()->isEmpty()) {
-            addToLog("===\n\n");
-        }
-
-        addToLog(tr("Command line: \"%1\"").arg(
-                     m_proc.program() + " " + m_proc.arguments().join(" ")));
-        m_proc.start(QProcess::Unbuffered|QProcess::ReadOnly);
-    });
-
+    m_conversion_in_progress = false;
 }
 
 
@@ -298,7 +244,6 @@ void enable_if_supported(QWidget* w, const QChar& c, const QSet<QChar> supported
 
 void MainWindow::filterSupportedOpts()
 {
-    qDebug() << m_supportedOpts;
     enable_if_supported(ui->edDPI, 'd', m_supportedOpts);
     enable_if_supported(ui->edMaxThreads, 't', m_supportedOpts);
     enable_if_supported(ui->edPagesPerDict, 'p', m_supportedOpts);
@@ -468,7 +413,7 @@ void MainWindow::getEncoderDetails()
 
     ui->lblBinVer->setText(tr("Detected minidjvu version: <i>%1</i>").arg(version));
     if (!supported_opts.isEmpty()) {
-        ui->lblBinVer->setText(tr("%1<br>Supported options: %2").arg(ui->lblBinVer->text()).arg(supported_opts));
+        ui->lblBinVer->setText(tr("%1<br>Supported options: %2").arg(ui->lblBinVer->text(), supported_opts));
     }
 
     filterSupportedOpts();
@@ -524,5 +469,74 @@ void MainWindow::addToLog(const QString& txt)
     if (ui->textLog->verticalScrollBar()) {
         ui->textLog->moveCursor(QTextCursor::End);
         ui->textLog->ensureCursorVisible();
+    }
+}
+
+void MainWindow::on_btnConvert_clicked()
+{
+    if (m_conversion_in_progress) {
+        m_proc.kill();
+        ui->progressBar->setValue(0);
+    } else {
+        ui->progressBar->setValue(0);
+
+        updateSettings();
+        updateOpts();
+
+        if (!ui->listInputFiles->count()) {
+            QMessageBox::critical(this, tr("Conversion"), tr("Please select some images to convert!"));
+            return;
+        }
+
+        if (ui->edTargetFile->text().isEmpty()) {
+            QMessageBox::critical(this, tr("Conversion"), tr("Please enter a target filename!"));
+            return;
+        }
+
+        QFileInfo fi(ui->edTargetFile->text());
+        const QString ext = fi.suffix().toLower();
+        if (ext != "djvu" && ext != "djv") {
+            if (QMessageBox::question(this, tr("Conversion"), tr("Target filename must have .djvu or .djv extension!\nAdd \".djvu\" to filename and continue?")) !=
+                    QMessageBox::StandardButton::Yes) {
+                return;
+            }
+            ui->edTargetFile->setText(ui->edTargetFile->text() + ".djvu");
+            fi.setFile(ui->edTargetFile->text());
+        }
+
+        if (fi.exists()) {
+            if (QMessageBox::question(this, tr("Conversion"), tr("Target file already exists! Continue?")) !=
+                    QMessageBox::StandardButton::Yes) {
+                return;
+            }
+        }
+
+#if QT_VERSION >= 0x050E00
+        QStringList opts (opt2cmd(m_opt, m_supportedOpts).split(" ", Qt::SkipEmptyParts));
+#else
+        QStringList opts (opt2cmd(m_opt, m_supportedOpts).split(" ", QString::SkipEmptyParts));
+#endif
+
+
+        for(int i = 0; i < ui->listInputFiles->count(); ++i) {
+            opts.append(ui->listInputFiles->item(i)->data(Qt::UserRole).toString());
+        }
+
+        ui->progressBar->setMaximum(ui->listInputFiles->count());
+
+        opts.append(ui->edTargetFile->text());
+
+        m_proc.setArguments(opts);
+        m_proc.setProcessChannelMode(QProcess::ProcessChannelMode::MergedChannels);
+        m_proc.setProgram(m_set.path2Bin);
+        m_proc.setArguments(opts);
+
+        if (!ui->textLog->document()->isEmpty()) {
+            addToLog("===\n\n");
+        }
+
+        addToLog(tr("Command line: \"%1\"").arg(
+                     m_proc.program() + " " + m_proc.arguments().join(" ")));
+        m_proc.start(QProcess::Unbuffered|QProcess::ReadOnly);
     }
 }

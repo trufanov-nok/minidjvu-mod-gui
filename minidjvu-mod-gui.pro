@@ -8,7 +8,7 @@ QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = minidjvu_mod_gui
+TARGET = minidjvu-mod-gui
 TEMPLATE = app
 
 # The following define makes your compiler emit warnings if you use
@@ -24,6 +24,11 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 CONFIG += c++14
 
+# Qt 5.3 and lower doesn't recognize "c++14".
+contains(QT_MAJOR_VERSION, 5):lessThan(QT_MINOR_VERSION, 4) {
+    CONFIG += c++11
+}
+
 SOURCES += \
         main.cpp \
         mainwindow.cpp
@@ -36,5 +41,6 @@ FORMS += \
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
+else: linux: target.path = /usr/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target

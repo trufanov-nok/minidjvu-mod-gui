@@ -1,0 +1,6 @@
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Source: https://github.com/trufanov-nok/minidjvu-mod-gui
+
+Files: *
+Copyright: 2019-2020 Alexander Trufanov <trufanovan@gmail.com>
+License: GPL-3+

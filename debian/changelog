@@ -1,0 +1,5 @@
+minidjvu-mod-gui (0.2.1-0ubuntu1) bionic; urgency=medium
+
+  * Initial Release of the GUI for the Lunchpad
+
+ -- Alexander Trufanov <trufanovan@gmail.com>  Wed, 09 Dec 2020 13:11:00 +0300
