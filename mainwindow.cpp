@@ -52,10 +52,10 @@ QString add_opt(const QChar& c, QString val, const QSet<QChar>& supported, bool 
 QString opt2cmd(const Options& opt, const QSet<QChar>& supported)
 {
     QString res;
-    res += add_opt('d', QString::number(opt.dpi), supported);
-    res += add_opt('p', QString::number(opt.pagesPerDict), supported);
-    res += add_opt('t', QString::number(opt.threads), supported);
-    res += add_opt('C', QString::number(opt.classifier), supported);
+    res += add_opt('d', QString::number(opt.dpi), supported, opt.dpi > 0);
+    res += add_opt('p', QString::number(opt.pagesPerDict), supported, opt.pagesPerDict > 0);
+    res += add_opt('t', QString::number(opt.threads), supported, opt.threads > 0);
+    res += add_opt('C', QString::number(opt.classifier), supported, opt.classifier > 0);
     res += add_opt('i', "", supported, opt.indirect);
     res += add_opt('X', opt.ext, supported, !opt.ext.isEmpty());
     res += add_opt('l', "", supported, opt.lossy);
@@ -135,7 +135,6 @@ void MainWindow::process_ready_read()
 #endif
     for (const QString& s: sl) {
         if (s.startsWith("[") && s.endsWith("%]")) {
-            qDebug() << s.mid(1,s.length()-3).toFloat();
             float progress = s.mid(1,s.length()-3).toFloat() /100.;
             ui->progressBar->setValue(ui->progressBar->maximum()*progress);
         }
