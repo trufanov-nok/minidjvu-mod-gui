@@ -11,6 +11,6 @@ Standards-Version: 4.2.1
 Package: minidjvu-mod-gui
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, minidjvu-mod
-Suggests: minidjvu | djview4 | djview3 | djvu-viewer, djvulibre-bin, pdf2djvu
-Description: A simple gui for minidjvu-mod encoder.
+Suggests: djview4
+Description: A simple gui for minidjvu-mod DjVu encoder.
  Supports original minidjvu as well.
