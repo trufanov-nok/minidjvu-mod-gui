@@ -129,9 +129,9 @@ void MainWindow::process_ready_read()
     QString val(m_proc.readAll());
     addToLog(val);
 #if QT_VERSION >= 0x050E00
-    const QStringList sl = val.split("\n", Qt::SkipEmptyParts);
+    const QStringList sl = val.split(QRegularExpression("[\r\n]"), Qt::SkipEmptyParts);
 #else
-    const QStringList sl = val.split("\n", QString::SkipEmptyParts);
+    const QStringList sl = val.split(QRegularExpression("[\r\n]"), QString::SkipEmptyParts);
 #endif
     for (const QString& s: sl) {
         if (s.startsWith("[") && s.endsWith("%]")) {
