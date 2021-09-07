@@ -18,7 +18,6 @@ Options init_options() {
     opt.threads = cnt;
 
     opt.pagesPerDict = 10;
-    opt.classifier = 3;
     opt.agression = 100;
     opt.lossy = opt.clean = opt.match =
             opt.protos = opt.averaging = opt.erosion = true;
@@ -55,7 +54,6 @@ QString opt2cmd(const Options& opt, const QSet<QChar>& supported)
     res += add_opt('d', QString::number(opt.dpi), supported, opt.dpi > 0);
     res += add_opt('p', QString::number(opt.pagesPerDict), supported, opt.pagesPerDict > 0);
     res += add_opt('t', QString::number(opt.threads), supported, opt.threads > 0);
-    res += add_opt('C', QString::number(opt.classifier), supported, opt.classifier > 0);
     res += add_opt('i', "", supported, opt.indirect);
     res += add_opt('X', opt.ext, supported, !opt.ext.isEmpty());
     res += add_opt('l', "", supported, opt.lossy);
@@ -246,7 +244,6 @@ void MainWindow::filterSupportedOpts()
     enable_if_supported(ui->edDPI, 'd', m_supportedOpts);
     enable_if_supported(ui->edMaxThreads, 't', m_supportedOpts);
     enable_if_supported(ui->edPagesPerDict, 'p', m_supportedOpts);
-    enable_if_supported(ui->cbClassifier, 'C', m_supportedOpts);
     enable_if_supported(ui->sbAgression, 'a', m_supportedOpts);
     enable_if_supported(ui->edExt, 'X', m_supportedOpts);
     enable_if_supported(ui->cbLossy, 'l', m_supportedOpts);
@@ -268,7 +265,6 @@ void MainWindow::displayOpts()
     ui->edDPI->setText(QString::number(m_opt.dpi));
     ui->edMaxThreads->setText(QString::number(m_opt.threads));
     ui->edPagesPerDict->setText(QString::number(m_opt.pagesPerDict));
-    ui->cbClassifier->setCurrentIndex(m_opt.classifier-1);
     ui->sbAgression->setValue(m_opt.agression);
     ui->edExt->setText(m_opt.ext);
     ui->cbLossy->setChecked(m_opt.lossy);
@@ -303,10 +299,6 @@ void MainWindow::updateOpts()
     }
 
     m_opt.pagesPerDict = ui->edPagesPerDict->text().toInt();
-
-    if (ui->cbClassifier->isEnabled()) {
-        m_opt.classifier = ui->cbClassifier->currentIndex()+1;
-    }
 
     m_opt.agression = ui->sbAgression->value();
     m_opt.ext = ui->edExt->text();

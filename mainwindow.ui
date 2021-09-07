@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>557</width>
-    <height>523</height>
+    <height>498</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>4</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tabMain">
        <attribute name="title">
@@ -361,56 +361,7 @@
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
-          <layout class="QHBoxLayout" name="horizontalLayout_4">
-           <item>
-            <widget class="QLabel" name="lblClassifier">
-             <property name="text">
-              <string>Classifier:</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QComboBox" name="cbClassifier">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="currentIndex">
-              <number>2</number>
-             </property>
-             <item>
-              <property name="text">
-               <string>Fast matching search</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Intent matching search</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Maximum matching search</string>
-              </property>
-             </item>
-            </widget>
-           </item>
-           <item>
-            <spacer name="horizontalSpacer_7">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>40</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-          </layout>
+          <layout class="QHBoxLayout" name="horizontalLayout_4"/>
          </widget>
         </item>
         <item>
@@ -792,7 +743,7 @@
         <item>
          <widget class="QLabel" name="label_5">
           <property name="text">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This is a simple GUI for minidjvu_mod - opensource console DjVu document encoder.&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;https://github.com/trufanov-nok/minidjvu_mod&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#2980b9;&quot;&gt;minidjvu_mod&lt;/span&gt;&lt;/a&gt; - is a modified version of &lt;a href=&quot;http://minidjvu.sourceforge.net&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#2980b9;&quot;&gt;minidjvu&lt;/span&gt;&lt;/a&gt; encoder. It supposed to be faster due to image transformation algorythms optimization and support of multithreading. There are several types of classification implemented and fastest one supposed to be alike original one. Others allow to produce smaller DjVu documents. As the classifier with maximum compression is used by default the performance of original and modified minidjvu is hard to compare.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This is a simple GUI for minidjvu_mod - opensource console DjVu document encoder.&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;https://github.com/trufanov-nok/minidjvu_mod&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#2980b9;&quot;&gt;minidjvu_mod&lt;/span&gt;&lt;/a&gt; - is a modified version of &lt;a href=&quot;http://minidjvu.sourceforge.net&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#2980b9;&quot;&gt;minidjvu&lt;/span&gt;&lt;/a&gt; encoder. It supposed to be faster due to image transformation algorithms optimization and support of multithreading.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="wordWrap">
            <bool>true</bool>

@@ -19,7 +19,6 @@ struct Options {
     int dpi;
     int threads;
     int pagesPerDict;
-    int classifier;
     int agression;
     QString ext;
     bool lossy;
