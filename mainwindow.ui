@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>4</number>
       </property>
       <widget class="QWidget" name="tabMain">
        <attribute name="title">
@@ -719,7 +719,7 @@
         <item>
          <widget class="QLabel" name="label_3">
           <property name="text">
-           <string>Version: 0.2.2</string>
+           <string>Version: 0.2.3</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignCenter</set>
