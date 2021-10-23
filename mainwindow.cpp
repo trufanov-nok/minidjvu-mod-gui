@@ -13,7 +13,7 @@ const int __MAX_COMMAND_LINE_SIZE = 65536 / 2; // Windows limit
 
 Options init_options() {
     Options opt;
-    opt.dpi = 900;
+    opt.dpi = 600;
 
     int cnt = QThread::idealThreadCount();
     if (cnt > 1) cnt--;
@@ -92,7 +92,9 @@ QStringList generate_sett_content(const QStringList& files, const Options& opt)
     sl.append("");
     sl.append("\t(default-image\t\t\t# default image options");
     sl.append("");
-    sl.append(QString("\t\tdpi\t\t\t%1\t\t# if set, use this dpi value for encoding all images").arg(opt.dpi));
+    if (opt.dpi) {
+        sl.append(QString("\t\tdpi\t\t\t%1\t\t# if set, use this dpi value for encoding all images").arg(opt.dpi));
+    }
     sl.append("\t\t\t\t\t\t\t# except those that have personal dpi option set.");
     sl.append("\t\t\t\t\t\t\t# if not set, use dpi of source image of each page.");
     sl.append("");
@@ -330,7 +332,7 @@ void MainWindow::filterSupportedOpts()
 
 void MainWindow::displayOpts()
 {
-    ui->edDPI->setText(QString::number(m_opt.dpi));
+    ui->edDPI->setText(m_opt.dpi?QString::number(m_opt.dpi):"");
     ui->edMaxThreads->setText(QString::number(m_opt.threads));
     ui->edPagesPerDict->setText(QString::number(m_opt.pagesPerDict));
     ui->sbAgression->setValue(m_opt.agression);
@@ -360,7 +362,7 @@ void MainWindow::displayOpts()
 void MainWindow::updateOpts()
 {
 
-    m_opt.dpi = ui->edDPI->text().toInt();
+    m_opt.dpi = !ui->edDPI->text().isEmpty() ? ui->edDPI->text().toInt() : 0;
 
     if (ui->edMaxThreads->isEnabled()) {
         m_opt.threads = ui->edMaxThreads->text().toInt();

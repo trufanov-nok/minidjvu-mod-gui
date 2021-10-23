@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tabMain">
        <attribute name="title">
@@ -207,7 +207,7 @@
                   </sizepolicy>
                  </property>
                  <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Specify the resolution of an image, measured in dots per inch. The resolution affects some algorithms and it's recorded in DjVu and BMP files (TIFF should join someday). &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Specify the resolution of the input images, measured in dots per inch. If none is set - the encoder will try to detect resolution of each page from the corresponding image file. The resolution affects some algorithms and it's recorded in DjVu document.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="text">
                   <string/>
@@ -216,7 +216,7 @@
                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                  </property>
                  <property name="placeholderText">
-                  <string>600</string>
+                  <string/>
                  </property>
                 </widget>
                </item>
