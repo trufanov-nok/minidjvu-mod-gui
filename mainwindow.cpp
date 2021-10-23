@@ -34,7 +34,7 @@ Settings init_settings()
 {
     Settings set;
 #ifdef __linux
-    set.path2Bin = "/usr/bin/minidjvu-mod";
+    set.path2Bin = "minidjvu-mod";
 #else
     set.path2Bin = "bin/minidjvu-mod";
 #endif
