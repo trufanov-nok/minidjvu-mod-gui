@@ -751,7 +751,7 @@
         <item>
          <widget class="QLabel" name="label_5">
           <property name="text">
-           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This is a simple GUI for minidjvu_mod - opensource console DjVu document encoder.&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;https://github.com/trufanov-nok/minidjvu_mod&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#2980b9;&quot;&gt;minidjvu_mod&lt;/span&gt;&lt;/a&gt; - is a modified version of &lt;a href=&quot;http://minidjvu.sourceforge.net&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#2980b9;&quot;&gt;minidjvu&lt;/span&gt;&lt;/a&gt; encoder. It supposed to be faster due to image transformation algorithms optimization and support of multithreading.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This is a simple GUI for minidjvu-mod - opensource console DjVu document encoder.&lt;/p&gt;&lt;p&gt;&lt;a href=&quot;https://github.com/trufanov-nok/minidjvu_mod&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#2980b9;&quot;&gt;minidjvu-mod&lt;/span&gt;&lt;/a&gt; - is a modified version of &lt;a href=&quot;http://minidjvu.sourceforge.net&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#2980b9;&quot;&gt;minidjvu&lt;/span&gt;&lt;/a&gt; encoder. It supposed to be faster due to image transformation algorithms optimization and support of multithreading.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
           </property>
           <property name="wordWrap">
            <bool>true</bool>
