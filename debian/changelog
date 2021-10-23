@@ -1,3 +1,12 @@
+minidjvu-mod-gui (0.2.4-0ubuntu1) trusty; urgency=medium
+
+  * Use -S option to pass argiments that doesn't fit into 32Kb command line
+  * use "minidjvu-mod" instead of "/usr/bin/minidjvu-mod" as default encoder
+    setting for Linux
+  * Limit possible Djbz extensions to "djbz" and "iff"
+
+ -- Alexander Trufanov <trufanovan@gmail.com>  Wed, 23 Oct 2021 15:10:00 +0300
+
 minidjvu-mod-gui (0.2.3-0ubuntu1) trusty; urgency=medium
 
   * Update to reflect changes in minidjvu-mod 0.9m05 (no -C)
