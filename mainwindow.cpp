@@ -9,6 +9,8 @@
 #include <QRegularExpression>
 #include <QDebug>
 
+const int __MAX_COMMAND_LINE_SIZE = 65536 / 2; // Windows limit
+
 Options init_options() {
     Options opt;
     opt.dpi = 900;
@@ -71,6 +73,72 @@ QString opt2cmd(const Options& opt, const QSet<QChar>& supported)
     res += add_opt('u', "", supported, opt.unbuffered);
 
     return res;
+}
+
+QStringList generate_sett_content(const QStringList& files, const Options& opt)
+{
+    QStringList sl;
+    sl.append("(options\t\t\t\t\t# application options and defaults");
+    sl.append("");
+    sl.append("\t(default-djbz\t\t\t# default djbz settings");
+    sl.append(QString("\t\taveraging\t\t%1\t# default averaging").arg(opt.protos && opt.averaging?"1":"0"));
+    sl.append(QString("\t\taggression\t\t%1\t# default aggression level").arg(opt.agression));
+    sl.append(QString("\t\terosion\t\t\t%1\t# default erosion").arg(opt.erosion?"1":"0"));
+    sl.append(QString("\t\tno-prototypes\t%1\t# default prototypes usage").arg(opt.protos?"0":"1"));
+    if (!opt.ext.isEmpty()) {
+        sl.append(QString("\t\txtension\t\t%1\t# default djbz id extension").arg(opt.ext));
+    }
+    sl.append("\t)");
+    sl.append("");
+    sl.append("\t(default-image\t\t\t# default image options");
+    sl.append("");
+    sl.append(QString("\t\tdpi\t\t\t%1\t\t# if set, use this dpi value for encoding all images").arg(opt.dpi));
+    sl.append("\t\t\t\t\t\t\t# except those that have personal dpi option set.");
+    sl.append("\t\t\t\t\t\t\t# if not set, use dpi of source image of each page.");
+    sl.append("");
+    sl.append(QString("\t\tsmooth\t\t\t%1\t# default smoothing image before processing").arg(opt.smooth?"1":"0"));
+    sl.append(QString("\t\tclean\t\t\t%1\t# default cleaning image after processing").arg(opt.clean?"1":"0"));
+    sl.append(QString("\t\terosion\t\t\t%1\t# default erosion image after processing").arg(opt.erosion?"1":"0"));
+    sl.append("\t)");
+    sl.append("");
+    sl.append(QString("\tindirect\t\t\t%1\t# save indirect djvu (multifile)").arg(opt.indirect?"1":"0"));
+    sl.append(QString("\tlossy\t\t\t\t%1\t# if set, turns off or on following options:").arg(opt.lossy?"1":"0"));
+    sl.append("\t\t\t\t\t\t\t# default-djbz::erosion, default-djbz::averaging");
+    sl.append("\t\t\t\t\t\t\t# default-image::smooth, default-image::clean, default-image::match");
+    sl.append("");
+    sl.append(QString("\tmatch\t\t\t\t%1\t# use substitutions of visually similar characters for compression").arg(opt.match?"1":"0"));
+    sl.append(QString("\tpages-per-dict\t\t%1\t# automatically assign pages that aren't referred").arg(opt.pagesPerDict));
+    sl.append("\t\t\t\t\t\t\t# in any djbz blocks to the new djbz dictionaries.");
+    sl.append("\t\t\t\t\t\t\t# New dictionaries contain 10 (default) pages or less.");
+    sl.append("");
+    sl.append(QString("\treport\t\t\t\t%1\t# report progress to stdout").arg(opt.report?"1":"0"));
+    sl.append(QString("\tthreads-max\t\t\t%1\t# if set, use max N threads for processing (each thread").arg(opt.threads));
+    sl.append("\t\t\t\t\t\t\t# process one block of pages. One djbz is a one block).");
+    sl.append("\t\t\t\t\t\t\t# By default, if CPU have C cores:");
+    sl.append("\t\t\t\t\t\t\t# if C > 2 then N = C-1, otherwise N = 1");
+    sl.append("");
+    sl.append(QString("\tverbose\t\t\t\t%1\t# print verbose log to stdout").arg(opt.verbose?"1":"0"));
+    sl.append(QString("\twarnings\t\t\t%1\t# print libtiff warnings to stdout").arg(opt.warnings?"1":"0"));
+    sl.append(")");
+    sl.append("");
+    sl.append("");
+    sl.append("(input-files\t\t\t\t# Contains a list of input image files");
+    sl.append("\t\t\t\t\t\t\t# the order is the same as the the order of pages in document.");
+    sl.append("\t\t\t\t\t\t\t# Multipage tiff's are expanded to thet set of single page tiffs.");
+    sl.append("");
+
+    for (const QString& f: files) {
+        sl.append("\t\"" + f + "\"");
+    }
+
+    sl.append(")");
+    return sl;
+}
+
+QString get_sett_filename(const QString& document_filename)
+{
+    QFileInfo fi(document_filename);
+    return fi.absolutePath() + "/" + fi.baseName() + ".sett";
 }
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -502,22 +570,68 @@ void MainWindow::on_btnConvert_clicked()
             }
         }
 
-#if QT_VERSION >= 0x050E00
-        QStringList opts (opt2cmd(m_opt, m_supportedOpts).split(" ", Qt::SkipEmptyParts));
-#else
-        QStringList opts (opt2cmd(m_opt, m_supportedOpts).split(" ", QString::SkipEmptyParts));
-#endif
+        ui->progressBar->setMaximum(ui->listInputFiles->count());
 
-
+        QStringList files;
         for(int i = 0; i < ui->listInputFiles->count(); ++i) {
-            opts.append(ui->listInputFiles->item(i)->data(Qt::UserRole).toString());
+            files.append(ui->listInputFiles->item(i)->data(Qt::UserRole).toString());
         }
 
-        ui->progressBar->setMaximum(ui->listInputFiles->count());
+        bool use_sett_file = ui->cbUseSettingsFile->isChecked();
+
+#if QT_VERSION >= 0x050E00
+        const QStringList cmd_opts(opt2cmd(m_opt, m_supportedOpts).split(" ", Qt::SkipEmptyParts));
+#else
+        const QStringList cmd_opts(opt2cmd(m_opt, m_supportedOpts).split(" ", QString::SkipEmptyParts));
+#endif
+
+        if (!use_sett_file &&
+                ( m_set.path2Bin.size() +
+                  cmd_opts.join("\" \"").size() +
+                  files.join("\" \"").size() +
+                  ui->edTargetFile->text().size() + 2 >
+                  (__MAX_COMMAND_LINE_SIZE - 300) ) ) {
+
+            // enforce cbUseSettingsFile if our command may too big to execute
+
+            if (QMessageBox::warning(this, tr("Command line is too big"),
+                                     tr("The list of input files and options can't be passed to encoder as command line "
+                                        "arguments because of its size is limited.\n"
+                                        "The settings file usage will be enforced. Continue?"),
+                                     QMessageBox::Ok|QMessageBox::Cancel, QMessageBox::Ok) == QMessageBox::Cancel) {
+                return;
+            }
+
+            ui->cbUseSettingsFile->setChecked(true);
+            use_sett_file = true;
+        }
+
+        QStringList opts;
+        if (!use_sett_file) {
+            opts.append(cmd_opts);
+            opts.append(files);
+        } else {
+            const QString filename = get_sett_filename(ui->edTargetFile->text());
+            QFile f(filename);
+            if (f.open(QIODevice::WriteOnly)) {
+                const QStringList sl = generate_sett_content(files, m_opt);
+                QTextStream ts(&f);
+                for (const QString& s: sl) {
+                    ts << s << "\n";
+                }
+                f.close();
+            } else {
+                QMessageBox::critical(this, tr("Write file error"),
+                                      tr("Can't open file %1 for writing. Terminating.").arg(filename));
+                return;
+            }
+
+            opts.append("-S");
+            opts.append(filename);
+        }
 
         opts.append(ui->edTargetFile->text());
 
-        m_proc.setArguments(opts);
         m_proc.setProcessChannelMode(QProcess::ProcessChannelMode::MergedChannels);
         m_proc.setProgram(m_set.path2Bin);
         m_proc.setArguments(opts);

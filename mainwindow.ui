@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>557</width>
-    <height>498</height>
+    <height>512</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>4</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tabMain">
        <attribute name="title">
@@ -38,6 +38,16 @@
              </property>
              <property name="selectionBehavior">
               <enum>QAbstractItemView::SelectItems</enum>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="cbUseSettingsFile">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If enabled - the filelist won't be passed to encoder in a command line (which size might be limited).&lt;/p&gt;&lt;p&gt;Instead a settings file with name &amp;lt;document_name&amp;gt;.sett will be generated in the output document folder. This file contains a list of all input files that need to be processed and passed to encoder via -S argument.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="text">
+              <string>Pass to encoder via a settings file</string>
              </property>
             </widget>
            </item>
