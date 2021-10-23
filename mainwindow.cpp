@@ -313,7 +313,7 @@ void MainWindow::filterSupportedOpts()
     enable_if_supported(ui->edMaxThreads, 't', m_supportedOpts);
     enable_if_supported(ui->edPagesPerDict, 'p', m_supportedOpts);
     enable_if_supported(ui->sbAgression, 'a', m_supportedOpts);
-    enable_if_supported(ui->edExt, 'X', m_supportedOpts);
+    enable_if_supported(ui->cbExt, 'X', m_supportedOpts);
     enable_if_supported(ui->cbLossy, 'l', m_supportedOpts);
     enable_if_supported(ui->cbClean, 'c', m_supportedOpts);
     enable_if_supported(ui->cbMatch, 'm', m_supportedOpts);
@@ -334,7 +334,7 @@ void MainWindow::displayOpts()
     ui->edMaxThreads->setText(QString::number(m_opt.threads));
     ui->edPagesPerDict->setText(QString::number(m_opt.pagesPerDict));
     ui->sbAgression->setValue(m_opt.agression);
-    ui->edExt->setText(m_opt.ext);
+    ui->cbExt->setCurrentIndex(std::max(0, ui->cbExt->findText(m_opt.ext)));
     ui->cbLossy->setChecked(m_opt.lossy);
 
     emit ui->cbLossy->stateChanged(m_opt.lossy);
@@ -369,7 +369,7 @@ void MainWindow::updateOpts()
     m_opt.pagesPerDict = ui->edPagesPerDict->text().toInt();
 
     m_opt.agression = ui->sbAgression->value();
-    m_opt.ext = ui->edExt->text();
+    m_opt.ext = ui->cbExt->currentText();
     m_opt.lossy = ui->cbLossy->isChecked();
     m_opt.clean = ui->cbClean->isChecked();
     m_opt.match = ui->cbMatch->isChecked();

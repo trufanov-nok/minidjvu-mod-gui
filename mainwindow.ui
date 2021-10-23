@@ -323,7 +323,7 @@
                <item>
                 <widget class="QLabel" name="lblExt">
                  <property name="text">
-                  <string>Extension for djbz:</string>
+                  <string>Extension for shared dictionaries:</string>
                  </property>
                 </widget>
                </item>
@@ -341,19 +341,17 @@
                 </spacer>
                </item>
                <item>
-                <widget class="QLineEdit" name="edExt">
-                 <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Specifies an extension for shared dictionary files (without a leading period). The default is &amp;quot;djbz&amp;quot;. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                 </property>
-                 <property name="placeholderText">
-                  <string>djbz</string>
-                 </property>
+                <widget class="QComboBox" name="cbExt">
+                 <item>
+                  <property name="text">
+                   <string>djbz</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>iff</string>
+                  </property>
+                 </item>
                 </widget>
                </item>
               </layout>
