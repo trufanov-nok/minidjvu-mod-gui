@@ -1,3 +1,9 @@
+minidjvu-mod-gui (0.2.5-0ubuntu1) trusty; urgency=medium
+
+  * Fix some bugs
+
+ -- Alexander Trufanov <trufanovan@gmail.com>  Mon, 13 Dec 2021 19:00:00 +0300
+
 minidjvu-mod-gui (0.2.4-0ubuntu1) trusty; urgency=medium
 
   * Use -S option to pass argiments that doesn't fit into 32Kb command line
