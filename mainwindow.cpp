@@ -203,11 +203,12 @@ void MainWindow::process_ready_read()
 #endif
     for (const QString& s: sl) {
         if (s.startsWith("[") && s.endsWith("%]")) {
-            float progress = s.mid(1,s.length()-3).toFloat() /100.;
-            ui->progressBar->setValue(ui->progressBar->maximum()*progress);
+            const int progress = qRound(s.midRef(1,s.length()-3).toFloat());
+            ui->progressBar->setValue(progress);
         }
     }
 }
+
 void MainWindow::process_finished(int exitCode)
 {
     QTime t(0,0);
@@ -571,8 +572,6 @@ void MainWindow::on_btnConvert_clicked()
                 return;
             }
         }
-
-        ui->progressBar->setMaximum(ui->listInputFiles->count());
 
         QStringList files;
         for(int i = 0; i < ui->listInputFiles->count(); ++i) {
