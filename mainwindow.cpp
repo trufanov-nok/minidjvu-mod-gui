@@ -54,7 +54,7 @@ QString opt2cmd(const Options& opt, const QSet<QChar>& supported)
 {
     QString res;
     res += add_opt('d', QString::number(opt.dpi), supported, opt.dpi > 0);
-    res += add_opt('p', QString::number(opt.pagesPerDict), supported, opt.pagesPerDict > 0);
+    res += add_opt('p', QString::number(opt.pagesPerDict), supported, opt.pagesPerDict >= 0);
     res += add_opt('t', QString::number(opt.threads), supported, opt.threads > 0);
     res += add_opt('i', "", supported, opt.indirect);
     res += add_opt('X', opt.ext, supported, !opt.ext.isEmpty());
